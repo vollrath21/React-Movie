@@ -24,11 +24,23 @@ function Home() {
         loadPopularMovies()
     }, [] ) // pass a function and a dependency array. if the array changed since last render, use effect
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault()
-        setSearchQuery(searchQuery)
+        
+        if (!searchQuery.trim() ) return
+        if (loading) return
+        setLoading(true)
+        try {
+            const searchResults = await searchMovies(searchQuery)
+            setMovies(searchResults)
+            setError(null)
+        } catch {
+            setError("Failed to search for movies...")
+        } finally {
+            setLoading(false)
+        }
 
-        alert(searchQuery)
+        setSearchQuery(searchQuery)
     }
 
     return (
@@ -43,12 +55,19 @@ function Home() {
                 />
                 <button className="search-button" type="submit">Search</button>
             </form>
-            <div className="movies-grid">
-                {movies.map(
-                    (movie) => 
-                    movie.title.toLowerCase().startsWith(searchQuery.toLowerCase()) &&
-                    (<MovieCard movie={movie} key={movie.id}/>))}
-            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            {loading ? (
+                <div className="loading">Loading...</div>
+            ) : ( 
+                <div className="movies-grid">
+                    {movies.map(
+                        (movie) => 
+                        movie.title.toLowerCase().startsWith(searchQuery.toLowerCase()) &&
+                        (<MovieCard movie={movie} key={movie.id}/>))}
+                </div>
+            )}
         </div>
     )
 }
