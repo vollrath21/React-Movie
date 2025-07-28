@@ -1,15 +1,28 @@
 import MovieCard from "../components/MovieCard"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import '../css/Home.css'
+import {searchMovies, getPopularMovies} from "../services/api.js"
 
 function Home() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [movies, setMovies] = useState([])
+    const [error, setError] = useState(null)
+    const [loading, setLoading] = useState(true)
 
-    const MOVIES = [
-        {id: 1, title: "John Wick", release_date:"2017"},
-        {id: 2, title: "John Wick 2", release_date:"2018"},
-        {id: 3, title: "John Wick 3", release_date:"2019"}
-    ]
+    useEffect( () => { // Runs once if left blank
+        const loadPopularMovies = async () => {
+            try {
+                const popularMovies = await getPopularMovies()
+                setMovies(popularMovies)
+            } catch (err) {
+                console.log(err)
+                setError("Failed to load movies...")
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadPopularMovies()
+    }, [] ) // pass a function and a dependency array. if the array changed since last render, use effect
 
     const handleSearch = (e) => {
         e.preventDefault()
@@ -31,7 +44,7 @@ function Home() {
                 <button className="search-button" type="submit">Search</button>
             </form>
             <div className="movies-grid">
-                {MOVIES.map(
+                {movies.map(
                     (movie) => 
                     movie.title.toLowerCase().startsWith(searchQuery.toLowerCase()) &&
                     (<MovieCard movie={movie} key={movie.id}/>))}
